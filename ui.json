@@ -1,0 +1,54 @@
+{
+    "screen_names": [
+      "Splash Screen / Onboarding",
+      "Home Screen / Discovery",
+      "Product Details"
+    ],
+    "design_description": {
+      "overall_style": "Modern, sleek, and fashion-focused **e-commerce mobile application** design. Uses a primarily **monochromatic** color scheme (black, white, and shades of gray) with occasional pops of color for accents (e.g., in ratings and product tags). **Clean typography** and generous use of **high-quality fashion photography** are key elements. The application follows standard **iOS/Android UI conventions** for navigation and controls.",
+      "splash_screen_onboarding": {
+        "purpose": "To introduce the brand **'Runova'** and encourage user engagement.",
+        "layout": "Full-screen professional model photograph overlaid with large, bold, stylized **brand text** ('RUNOVA'). A secondary text block below provides a **brand message** ('Elevate Your Style Game With Runova.') and a brief description. A prominent **'Get Started' call-to-action (CTA) button** is located at the bottom.",
+        "elements": [
+          "Full-height background image (fashion model)",
+          "Large, overlaid, stylized brand name/logo",
+          "Title and subtitle/description text",
+          "Primary CTA button ('Get Started') with a chevron/arrow icon"
+        ]
+      },
+      "home_screen_discovery": {
+        "purpose": "To allow users to discover and search for products.",
+        "layout": "Standard top navigation bar, followed by a **personalized welcome** message. A **search bar** is central, along with horizontal **category filters**. The main area displays a **grid-like product feed** with images, basic details, and prices.",
+        "elements": [
+          "Top bar with **User Profile Picture/Avatar** ('Hello! Alexa'), **Brand Name/Tagline** ('Tailored Trends, Handpicked for you.'), and a **Notification Icon** (bell).",
+          "Central **Search Bar** (Search icon, placeholder text 'Search').",
+          "**Filter/Sorting Icon** (right of the search bar).",
+          "Horizontal **Category Selection/Filter pills** (e.g., All, Women, Man, Kid) with one category selected/highlighted ('Women').",
+          "**Product Cards/Grid** showing:",
+          "Product Image",
+          "Product Name (e.g., 'Black Crop Top')",
+          "Product Category/Type (e.g., 'Women's Top')",
+          "Rating (e.g., '4.5')",
+          "Price Tag (e.g., '$45')",
+          "Heart/Favorite Icon (top right of the product image)."
+        ]
+      },
+      "product_details": {
+        "purpose": "To display all information about a specific product and allow selection and purchase.",
+        "layout": "Standard top navigation. Dominant **product image gallery** at the top. Details section below with **product name, rating, size selector, and add-to-cart controls**.",
+        "elements": [
+          "Top bar with a **Back Arrow icon** and **'Product Details'** title. **Heart/Favorite Icon** (top right).",
+          "Large, scrollable **Product Image Carousel** with indicator dots.",
+          "**Product Name** ('Black Crop Top').",
+          "**Price** ('$45').",
+          "**Rating and Review Count** (e.g., 4.5/5 based on 256 reviews).",
+          "**Size Selector** (horizontal row of pills/buttons: XS, S, M, L, XL, XXL) with 'L' selected.",
+          "**'View Product Details'** button/link.",
+          "**Color Swatches/Selectors** (small, colored dots) below the size selector.",
+          "**Quantity Selector** (e.g., '2').",
+          "Prominent **'Add to Cart' CTA button** with a shopping cart icon.",
+          "Bottom text/tagline (e.g., 'wardrobe fresh and fashionable.')."
+        ]
+      }
+    }
+  }

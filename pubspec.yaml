@@ -49,7 +49,6 @@ flutter:
 
   assets:
     - images/
-    - images/phone/
     - assets/translations/
 
   fonts:

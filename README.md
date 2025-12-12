@@ -1,188 +1,174 @@
-# NexBuy - Modern Shopping App
+# 🛍️ NexBuy - Next Generation Shopping App
 
-A modern Flutter shopping app with AI Assistant integration, built with clean architecture and beautiful UI design.
+![Flutter](https://img.shields.io/badge/Flutter-3.8.1-02569B?logo=flutter)
+![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?logo=supabase)
+![Gemini AI](https://img.shields.io/badge/AI-Gemini-8E75B2?logo=google)
+![Provider](https://img.shields.io/badge/State-Provider-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-## 🎨 Features
+**NexBuy** is a state-of-the-art Flutter e-commerce application designed to provide a premium shopping experience to users and a powerful management interface to admins. Built with a "Mobile First" approach, it leverages the power of **Supabase** for a robust backend and **Google Gemini** for an intelligent shopping assistant.
 
-### UI Design
-- **Modern & Minimal Design**: Clean interface with bright orange (#FF6A00) primary color
-- **Responsive Layout**: Optimized for different screen sizes
-- **Beautiful Cards**: Rounded corners, shadows, and smooth animations
-- **Custom Components**: Reusable widgets for consistent design
+---
 
-### Core Features
-- **Home Screen**: Greeting, search bar, promotional banner, categories, and product grid
-- **Product Categories**: Smartphones, Laptops, Headphones, Watches with filtering
-- **Product Grid**: Two-column layout with product cards showing images, prices, ratings
-- **Favorites System**: Add/remove products from favorites
-- **Shopping Cart**: Add products to cart functionality
-- **Search**: Real-time product search with filtering
-- **User Profile**: Personal information, stats, and settings
+## ✨ Key Features
 
-### AI Assistant Integration
-- **Floating Action Button**: Easy access to AI chat
-- **Natural Language Processing**: Ask questions like "Show me cheap gaming laptops"
-- **Smart Recommendations**: AI-powered product suggestions
-- **OpenAI Integration**: Ready for GPT-4o-mini API integration
-- **Mock Responses**: Demo mode with realistic AI responses
+### 👤 For Users
 
-## 🏗️ Architecture
+- **Modern UI/UX**: Sleek design featuring glassmorphism, smooth animations, and a vibrant color palette (#FF6A00).
+- **Smart Product Discovery**:
+  - Dynamic Product Grid with realtime availability.
+  - Advanced Search & Filtering (Categories, Price, Specs).
+  - **AI Shopping Assistant**: Chat with our Gemini-powered bot for personalized recommendations and product inquiries.
+- **Seamless Shopping Experience**:
+  - **Favorites System**: Synced across devices via Supabase.
+  - **Cart Management**: Intuitive cart with total calculation and stock validation.
+  - **Secure Checkout**: Integrated flow (UI ready for payment gateways).
+- **User Profiles**: Manage personal details, order history (coming soon), and preferences.
+- **Localization**: Bilingual support (English & Arabic) ready architecture.
 
-### Project Structure
+### 🛡️ For Admins
+
+- **Admin Dashboard**: comprehensive overview of analytics and inventory.
+- **Product Management**: CRUD operations for products, including image uploads to Supabase Storage.
+- **Category Management**: Manage product categories dynamically.
+- **Stock Control**: realtime updates on inventory levels.
+
+---
+
+## 🏗️ Technical Architecture
+
+NexBuy is built with clean architecture principles to ensure scalability and maintainability.
+
+### 🛠️ Tech Stack
+
+- **Framework**: [Flutter](https://flutter.dev/) (SDK 3.8.1+)
+- **Language**: [Dart](https://dart.dev/)
+- **Backend as a Service**: [Supabase](https://supabase.com/)
+  - **Authentication**: Secure email/password login & Google Auth.
+  - **Database**: PostgreSQL for relational data (Products, Users, Cart, etc.).
+  - **Storage**: Bucket storage for product images and assets.
+- **Artificial Intelligence**: [Google Gemini](https://deepmind.google/technologies/gemini/) (via `google_generative_ai`)
+- **State Management**: `provider` pattern.
+- **UI Components**: `glassmorphism`, `carousel_slider`, `flutter_svg`, `shimmer`.
+
+### 📂 Project Structure
+
 ```
 lib/
-├── main.dart                 # App entry point
-├── models/                   # Data models
-│   ├── product.dart
-│   └── category.dart
-├── providers/                # State management
-│   ├── product_provider.dart
-│   └── ai_provider.dart
-├── screens/                  # UI screens
-│   ├── main_screen.dart
-│   ├── home_screen.dart
-│   ├── search_screen.dart
-│   ├── favorites_screen.dart
-│   └── profile_screen.dart
-└── widgets/                  # Reusable components
-    ├── banner_card.dart
-    ├── category_chip.dart
-    ├── product_card.dart
-    └── ai_chat_modal.dart
+├── config/             # Configuration (Supabase keys, Theme)
+├── models/             # Data models (Product, Category, User, CartItem)
+├── providers/          # State providers (Cart, Favorites, User)
+├── screens/            # UI Screens (Home, Details, Cart, Admin)
+├── services/           # Backend services (Supabase, Gemini, Auth)
+├── widgets/            # Reusable UI components (ProductCard, Shimmer)
+└── main.dart           # App Entry point
 ```
 
-### State Management
-- **Provider Pattern**: Clean separation of business logic
-- **ProductProvider**: Manages products, categories, favorites, cart
-- **AIProvider**: Handles AI chat functionality and OpenAI integration
+---
+
+## 📚 Documentation & Guides
+
+We have detailed documentation for every aspect of the project:
+
+- **Setup Guides**:
+  - [🛠️ Database Setup](./DATABASE_SETUP.md) - **Start Here**
+  - [🔑 Admin Setup](./ADMIN_SETUP.md)
+  - [🔥 Firebase/Auth Setup](./FIREBASE_SETUP.md)
+- **Operational Guides**:
+  - [➕ How to Add Products](./HOW_TO_ADD_PRODUCTS.md)
+  - [📊 Access Admin Dashboard](./HOW_TO_ACCESS_ADMIN_DASHBOARD.md)
+- **Troubleshooting**:
+  - [🐛 Exceptions & Fixes](./EXCEPTIONS_FIXED_SUMMARY.md)
+  - [🔒 RLS Policies Fix](./FIX_RLS_ERROR.md)
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Flutter SDK (3.8.1 or higher)
-- Dart SDK
-- Android Studio / VS Code
-- Android/iOS device or emulator
+
+- Flutter SDK installed and added to PATH.
+- VS Code or Android Studio.
+- A Supabase project (Free tier works great).
+- A Google Cloud project for Gemini API key.
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd nexbuy
-   ```
+1.  **Clone the Repository**
 
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
+    ```bash
+    git clone https://github.com/yourusername/nexbuy.git
+    cd nexbuy
+    ```
 
-3. **Run the app**
-   ```bash
-   flutter run
-   ```
+2.  **Install Dependencies**
 
-### OpenAI Integration (Optional)
+    ```bash
+    flutter pub get
+    ```
 
-To enable real AI responses:
+3.  **Configuration**
 
-1. **Get OpenAI API Key**
-   - Visit [OpenAI Platform](https://platform.openai.com/)
-   - Create an account and generate an API key
+    - Open `lib/config/supabase_config.dart` and populate your Supabase URL and Anon Key.
+      ```dart
+      class SupabaseConfig {
+        static const String url = 'YOUR_SUPABASE_URL';
+        static const String anonKey = 'YOUR_SUPABASE_ANON_KEY';
+      }
+      ```
+    - _Note: Ensure you have run the SQL scripts found in the root directory to set up your Supabase tables._
 
-2. **Configure the API Key**
-   - Open `lib/providers/ai_provider.dart`
-   - Replace the empty `_apiKey` with your actual API key:
-   ```dart
-   String _apiKey = 'your-openai-api-key-here';
-   ```
+4.  **Database Migration**
 
-3. **Test the Integration**
-   - The app will use real OpenAI responses instead of mock responses
-   - Make sure you have sufficient API credits
+    - Run `supabase_migration.sql` in your Supabase SQL Editor to create tables.
+    - Run `insert_categories_data.sql` to seed initial data.
 
-## 📱 Screenshots
-
-### Home Screen
-- Modern greeting with user name
-- Search bar with filter functionality
-- Promotional banner with gradient design
-- Category chips with horizontal scrolling
-- Product grid with beautiful cards
-
-### AI Assistant
-- Floating action button for easy access
-- Chat interface with message bubbles
-- Real-time typing indicators
-- Smart product recommendations
-
-### Navigation
-- Bottom navigation with 4 tabs
-- Home, Search, Favorites, Profile
-- Active tab highlighting
-
-## 🛠️ Customization
-
-### Colors
-- Primary Color: `#FF6A00` (Bright Orange)
-- Background: White
-- Accent Colors: Grey variants
-
-### Fonts
-- Primary: Roboto (Material Design)
-- Clean and readable typography
-
-### Components
-- All widgets are reusable
-- Easy to modify and extend
-- Consistent design patterns
-
-## 🔮 Future Enhancements
-
-### Planned Features
-- **Firebase Integration**: Authentication and real-time data
-- **Payment Processing**: Stripe/PayPal integration
-- **Push Notifications**: Order updates and promotions
-- **Offline Support**: Local data caching
-- **Advanced Search**: Filters, sorting, and recommendations
-- **User Reviews**: Product ratings and comments
-- **Wishlist**: Save products for later
-- **Order Tracking**: Real-time order status
-
-### Technical Improvements
-- **State Management**: Migration to Riverpod/Bloc
-- **Testing**: Unit and widget tests
-- **Performance**: Image optimization and lazy loading
-- **Accessibility**: Screen reader support
-- **Internationalization**: Multi-language support
-
-## 📦 Dependencies
-
-- `flutter`: SDK
-- `provider`: State management
-- `http`: API requests
-- `font_awesome_flutter`: Icons
-- `cupertino_icons`: iOS-style icons
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Flutter team for the amazing framework
-- OpenAI for AI capabilities
-- Unsplash for beautiful product images
-- Material Design for UI guidelines
+5.  **Run the App**
+    ```bash
+    flutter run
+    ```
 
 ---
 
-**Built with ❤️ using Flutter**
+## 🎨 Design System
+
+NexBuy uses a custom design system centered around:
+
+- **Primary Color**: `Color(0xFFFF6A00)` (Vibrant Orange)
+- **Typography**: `Poppins` for headings, `Cairo` for Arabic support.
+- **Components**: Custom `ProductCard`, `GlassContainer`, and animated `SplashScreens`.
+
+---
+
+## 🛣️ Roadmap
+
+- [x] Core Shopping Features
+- [x] Supabase Authentication & Database
+- [x] Gemini AI Chat Integration
+- [x] Admin Dashboard
+- [ ] Payment Gateway Integration (Stripe)
+- [ ] Push Notifications
+- [ ] Order Tracking System
+- [ ] PWA Support
+
+---
+
+## 🤝 Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+**Built with ❤️ by the NexBuy Team**

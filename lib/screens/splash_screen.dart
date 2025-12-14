@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:slide_to_act/slide_to_act.dart';
-
 import '../widgets/language_switcher.dart';
 
 import '../localization/app_localizations.dart';
@@ -28,7 +26,6 @@ abstract class _AppColors {
   static const Color surface = Color(0xFF1A1A1A);
   static const Color textPrimary = Colors.white;
   static const Color textMuted = Color(0xFF9CA3AF);
-  static const Color textDark = Color(0xFF1C1D4F);
 }
 
 class AppSplashScreen extends StatefulWidget {
@@ -346,85 +343,68 @@ class _AppSplashScreenState extends State<AppSplashScreen>
   Widget _buildSwiper(BuildContext context, bool isRTL) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(60),
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: _AppColors.primary.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
             spreadRadius: 2,
           ),
         ],
       ),
-      child: SlideAction(
-        text: AppLocalizations.of(context).getStarted,
-        textStyle: FontUtils.getTextStyle(
-          context,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          color: _AppColors.textDark,
-        ),
-        innerColor: Colors.white,
-        outerColor: Colors.white,
-        sliderButtonIcon: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [_AppColors.primaryLight, _AppColors.primary],
-            ),
-            borderRadius: BorderRadius.circular(50),
-            boxShadow: [
-              BoxShadow(
-                color: _AppColors.primary.withOpacity(0.5),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.pushReplacementNamed(context, '/login');
+          },
+          borderRadius: BorderRadius.circular(30),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [_AppColors.primaryLight, _AppColors.primary],
               ),
-            ],
-          ),
-          child: Icon(
-            isRTL ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
-            color: Colors.white,
-            size: 22,
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  AppLocalizations.of(context).getStarted,
+                  style: FontUtils.getTextStyle(
+                    context,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  isRTL
+                      ? Icons.arrow_back_rounded
+                      : Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ],
+            ),
           ),
         ),
-        borderRadius: 60,
-        elevation: 0,
-        sliderRotate: false,
-        onSubmit: () {
-          Navigator.pushReplacementNamed(context, '/login');
-          return null;
-        },
       ),
     );
   }
 
   Widget _buildSwipeHint(BuildContext context, bool isRTL) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-
-      children: [
-        Icon(
-          isRTL ? Icons.arrow_forward : Icons.arrow_back,
-
-          color: _AppColors.textMuted.withOpacity(0.6),
-
-          size: 16,
-        ),
-
-        const SizedBox(width: 8),
-
-        Text(
-          AppLocalizations.of(context).swipeToContinue,
-          style: FontUtils.getTextStyle(
-            context,
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: _AppColors.textMuted.withOpacity(0.6),
-          ),
-        ),
-      ],
-    );
+    // Hidden as we moved to a button
+    return const SizedBox.shrink();
   }
 
   Widget _buildLanguageButton(BuildContext context) {

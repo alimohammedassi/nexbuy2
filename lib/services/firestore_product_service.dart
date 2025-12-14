@@ -105,7 +105,7 @@ class FirestoreProductService {
       final response = await _supabase
           .from(_table)
           .select()
-          .filter('id', 'in', ids);
+          .filter('id', 'in', '(${ids.map((e) => '"$e"').join(',')})');
 
       return (response as List)
           .map((data) => _productFromSupabase(data))

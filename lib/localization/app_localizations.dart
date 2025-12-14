@@ -180,6 +180,8 @@ class AppLocalizations {
       'splash_subtitle':
           'Discover curated collections and timeless pieces\ncrafted exclusively for you.',
       'swipe_to_continue': 'Swipe to continue',
+      'search': 'Search',
+      'favorites': 'Favorites',
     },
     'ar': {
       'app_name': 'نيكس باي',
@@ -347,6 +349,8 @@ class AppLocalizations {
       'splash_subtitle':
           'اكتشف مجموعات مختارة بعناية وقطع خالدة\nمصممة حصرياً لك.',
       'swipe_to_continue': 'اسحب للمتابعة',
+      'search': 'البحث',
+      'favorites': 'المفضلة',
     },
   };
 
@@ -856,6 +860,13 @@ class AppLocalizations {
         return categoryId; // Return original if not found
     }
   }
+
+  String get search =>
+      _localizedValues[locale.languageCode]?['search'] ??
+      _localizedValues['en']!['search']!;
+  String get favorites =>
+      _localizedValues[locale.languageCode]?['favorites'] ??
+      _localizedValues['en']!['favorites']!;
 }
 
 class _AppLocalizationsDelegate

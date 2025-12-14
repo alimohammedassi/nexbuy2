@@ -22,7 +22,9 @@ import '../models/user.dart';
 import '../screens/cart_screen.dart';
 import '../screens/search_screen.dart';
 import '../utils/snackbar_utils.dart';
+import 'package:fade_shimmer/fade_shimmer.dart';
 import '../services/google_maps_service.dart';
+import '../widgets/favorite_button.dart';
 
 class DiagonalLinesPainter extends CustomPainter {
   @override
@@ -54,12 +56,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  int _tabIndex = 1; // 0 = Search, 1 = Home, 2 = Profile (default to Home)
+  int _tabIndex = 0; // 0 = Home, 1 = Search, 2 = Favorites, 3 = Profile
   AnimationController? _animationController;
   final CartService _cartService = CartService();
-  final FavoriteService _favoriteService = FavoriteService();
   int _cartItemCount = 0;
-  int _favoriteCount = 0;
+
   List<Product> _apiProducts = [];
   bool _isLoadingProducts = false;
   bool _isSettingLocation = false;
@@ -108,6 +109,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
     });
 
+    // Initialize CategoryProvider with database data
+    CategoryProvider.initialize();
+
+    // Listen to category updates
+    CategoryProvider.service.addListener(_onCategoryUpdate);
+
     // Initialize Gemini service
     GeminiService.initialize();
 
@@ -120,18 +127,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
     });
 
-    // Listen to favorite changes
-    _favoriteService.favoriteStream.listen((favoriteIds) {
-      if (mounted) {
-        setState(() {
-          _favoriteCount = _favoriteService.favoriteCount;
-        });
-      }
-    });
-
     // Initialize cart count
     _cartItemCount = _cartService.itemCount;
-    _favoriteCount = _favoriteService.favoriteCount;
 
     // Fetch products from Supabase
     _fetchProductsFromSupabase();
@@ -142,6 +139,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // Load user data from Supabase
     _loadUserData();
 
+    // Refresh favorites to ensure they are up to date
+    FavoriteService().refreshFavorites();
+
     // Listen to user updates safely
     UserService().addListener(_onUserUpdate);
   }
@@ -149,6 +149,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _onUserUpdate() {
     if (!mounted) return;
     // Schedule the update to the next frame to avoid "setState during build" errors
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  void _onCategoryUpdate() {
+    if (!mounted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         setState(() {});
@@ -296,27 +305,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _fetchProductsFromSupabase() async {
-    if (!mounted) return;
     setState(() {
       _isLoadingProducts = true;
     });
 
     try {
       final products = await _productService.getAllProducts();
-
-      print('✅ Supabase Success: Fetched ${products.length} products');
-      for (var product in products) {
-        print('📱 Product: ${product.name} - ${product.price}');
-      }
-
-      if (mounted) {
-        setState(() {
-          _apiProducts = products;
-        });
-      }
+      setState(() {
+        _apiProducts = products;
+        _isLoadingProducts = false;
+      });
     } catch (e) {
-      print('❌ Error fetching products from Supabase: $e');
-    } finally {
+      debugPrint('Error fetching products: $e');
       if (mounted) {
         setState(() {
           _isLoadingProducts = false;
@@ -325,12 +325,85 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  Widget _buildShimmerGrid() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title shimmer
+          FadeShimmer(
+            height: 30,
+            width: 200,
+            radius: 4,
+            fadeTheme: FadeTheme.light,
+          ),
+          const SizedBox(height: 20),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.7,
+            ),
+            itemCount: 4,
+            itemBuilder: (context, index) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    // Image shimmer
+                    FadeShimmer(
+                      height: 120,
+                      width: double.infinity,
+                      radius: 20,
+                      fadeTheme: FadeTheme.light,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title shimmer
+                          FadeShimmer(
+                            height: 14,
+                            width: 100,
+                            radius: 4,
+                            fadeTheme: FadeTheme.light,
+                          ),
+                          const SizedBox(height: 8),
+                          // Price shimmer
+                          FadeShimmer(
+                            height: 18,
+                            width: 60,
+                            radius: 4,
+                            fadeTheme: FadeTheme.light,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _animationController?.dispose();
     _cartBumpController.dispose();
     _heroPageController.dispose();
     UserService().removeListener(_onUserUpdate);
+    CategoryProvider.service.removeListener(_onCategoryUpdate);
     super.dispose();
   }
 
@@ -349,8 +422,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: BottomNavScaffold(
         // Pages to show
         pages: [
-          const SearchScreen(),
           _buildHomeTabContent(),
+          const SearchScreen(),
+          const FavoritesScreen(),
           ProfileScreen(
             onProfileUpdated: () {
               setState(() {});
@@ -360,15 +434,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
         // Navbar icons (must be List<Widget>)
         icons: const [
-          Icon(Icons.search_rounded),
           Icon(Icons.home_filled),
+          Icon(Icons.search_rounded),
+          Icon(Icons.favorite_rounded),
           Icon(Icons.person_2_rounded),
         ],
 
         // Labels
         labels: [
-          'Search',
           AppLocalizations.of(context).home,
+          AppLocalizations.of(context).search,
+          AppLocalizations.of(context).favorites,
           AppLocalizations.of(context).profile,
         ],
 
@@ -526,7 +602,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               const SizedBox(height: 24),
               _buildPhonesSection(),
               const SizedBox(height: 28),
-              const SizedBox(height: 100), // Space for tab bar
+              const SizedBox(height: 120), // Space for tab bar
             ],
           ),
         ),
@@ -813,69 +889,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ),
                               const SizedBox(width: 10),
 
-                              // Favorite Icon with Badge
-                              Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  _buildGlassIcon(
-                                    icon: Icons.favorite_outline,
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const FavoritesScreen(),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  if (_favoriteCount > 0)
-                                    Positioned(
-                                      right: -6,
-                                      top: -6,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color(0xFFEF4444),
-                                              Color(0xFFDC2626),
-                                            ],
-                                          ),
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(
-                                                0xFFEF4444,
-                                              ).withOpacity(0.5),
-                                              blurRadius: 8,
-                                              spreadRadius: 1,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        constraints: const BoxConstraints(
-                                          minWidth: 18,
-                                          minHeight: 18,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            _favoriteCount > 99
-                                                ? '99+'
-                                                : '$_favoriteCount',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 9,
-                                              fontWeight: FontWeight.w900,
-                                              height: 1,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(width: 10),
+                              // Favorite Icon removed from header
 
                               // Cart Icon with Badge
                               Stack(
@@ -1456,29 +1470,55 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ],
                               ),
                               child: ClipOval(
-                                child: Image.asset(
-                                  c.imageUrl,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      decoration: const BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Color(0xFF2563EB),
-                                            Color(0xFF3B82F6),
-                                          ],
-                                        ),
+                                child: c.imageUrl.startsWith('http')
+                                    ? Image.network(
+                                        c.imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return Container(
+                                                decoration: const BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                    colors: [
+                                                      Color(0xFF2563EB),
+                                                      Color(0xFF3B82F6),
+                                                    ],
+                                                  ),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.category_rounded,
+                                                  color: Colors.white,
+                                                  size: 32,
+                                                ),
+                                              );
+                                            },
+                                      )
+                                    : Image.asset(
+                                        c.imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return Container(
+                                                decoration: const BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                    colors: [
+                                                      Color(0xFF2563EB),
+                                                      Color(0xFF3B82F6),
+                                                    ],
+                                                  ),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.category_rounded,
+                                                  color: Colors.white,
+                                                  size: 32,
+                                                ),
+                                              );
+                                            },
                                       ),
-                                      child: const Icon(
-                                        Icons.category_rounded,
-                                        color: Colors.white,
-                                        size: 32,
-                                      ),
-                                    );
-                                  },
-                                ),
                               ),
                             ),
                           ],
@@ -1545,6 +1585,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildPopularSection() {
+    // Show shimmer loading state
+    if (_isLoadingProducts) {
+      return _buildShimmerGrid();
+    }
+
     final items = _apiProducts.isNotEmpty
         ? _apiProducts
         : ProductProvider.featuredLaptops;
@@ -1806,24 +1851,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           Positioned(
                             right: 8,
                             top: 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.favorite_border,
-                                size: 16,
-                                color: Color(0xFF64748B),
-                              ),
+                            child: FavoriteButton(
+                              productId: product.id,
+                              size: 16,
                             ),
                           ),
                         ],
@@ -2065,6 +2095,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildPhonesSection() {
     final phones = ProductProvider.featuredPhones;
+
+    // Show shimmer if needed
+    if (_isLoadingProducts && phones.isEmpty) {
+      return _buildShimmerGrid();
+    }
 
     // Get screen width for responsive design
     final screenWidth = MediaQuery.of(context).size.width;
@@ -2323,24 +2358,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           Positioned(
                             right: 8,
                             top: 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.favorite_border,
-                                size: 16,
-                                color: Color(0xFF64748B),
-                              ),
+                            child: FavoriteButton(
+                              productId: product.id,
+                              size: 16,
                             ),
                           ),
                         ],
@@ -2693,45 +2713,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: StreamBuilder<Set<String>>(
-                      stream: _favoriteService.favoriteStream,
-                      initialData: _favoriteService.favoriteIds,
-                      builder: (context, snapshot) {
-                        final isFavorite = _favoriteService.isFavorite(
-                          laptop.id,
-                        );
-                        return GestureDetector(
-                          onTap: () {
-                            _favoriteService.toggleFavorite(laptop.id);
-                            if (isFavorite) {
-                              SnackbarUtils.showRemovedFromFavorites(context);
-                            } else {
-                              SnackbarUtils.showAddedToFavorites(context);
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              isFavorite
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              color: isFavorite ? Colors.red : Colors.grey[400],
-                              size: 16,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                    child: FavoriteButton(productId: laptop.id, size: 16),
                   ),
                 ],
               ),

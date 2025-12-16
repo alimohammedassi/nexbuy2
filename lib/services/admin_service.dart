@@ -58,4 +58,67 @@ class AdminService {
 
   /// Get current user ID
   String? get currentUserId => _supabase.auth.currentUser?.id;
+
+  /// Fetch all orders for admin dashboard
+  Future<List<Map<String, dynamic>>> getAllOrders() async {
+    try {
+      final response = await _supabase
+          .from('orders')
+          .select(
+            '*, order_items(*), addresses(*)',
+          ) // Assuming relationship names
+          .order('order_date', ascending: false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('Error fetching all orders: $e');
+      return [];
+    }
+  }
+
+  /// Update order status (Admin)
+  Future<bool> updateOrderStatus(String orderId, String newStatus) async {
+    try {
+      // Update status
+      await _supabase
+          .from('orders')
+          .update({
+            'status': newStatus,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', orderId);
+
+      // Try to send notification, but don't fail the whole operation if it fails
+      try {
+        // Fetch user_id to send notification
+        final orderData = await _supabase
+            .from('orders')
+            .select('user_id, order_number')
+            .eq('id', orderId)
+            .single();
+
+        final userId = orderData['user_id'];
+        final orderNumber = orderData['order_number'];
+
+        // Send notification
+        if (userId != null) {
+          await _supabase.from('notifications').insert({
+            'user_id': userId,
+            'title': 'Order Status Updated',
+            'message': 'Order #$orderNumber is now $newStatus.',
+            'type': 'orderUpdate',
+            'is_read': false,
+            'created_at': DateTime.now().toIso8601String(),
+            'data': {'orderId': orderId, 'status': newStatus},
+          });
+        }
+      } catch (notifyError) {
+        debugPrint('Warning: Failed to send notification: $notifyError');
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint('Error updating order status (admin): $e');
+      return false;
+    }
+  }
 }

@@ -97,22 +97,56 @@ class FirestoreProductService {
         });
   }
 
-  /// Get multiple products by IDs
   Future<List<Product>> getProductsByIds(List<String> ids) async {
     if (ids.isEmpty) return [];
 
     try {
+      debugPrint('Fetching products for IDs: $ids');
+
+      // Attempt efficient query
+      // Note: Passing a List to filter's value for 'in' operator relies on SDK serialization.
+      // If this fails (returns empty), we fall back to manual filtering.
       final response = await _supabase
           .from(_table)
           .select()
-          .filter('id', 'in', '(${ids.map((e) => '"$e"').join(',')})');
+          .filter('id', 'in', ids);
 
-      return (response as List)
+      final products = (response as List)
           .map((data) => _productFromSupabase(data))
           .toList();
+
+      if (products.isNotEmpty) {
+        debugPrint('Found ${products.length} products via direct query');
+        return products;
+      }
+
+      debugPrint(
+        'Direct query returned empty. Falling back to client-side filtering.',
+      );
+
+      // Fallback: Fetch all and filter (Guaranteed to work if IDs depend on specific formatting)
+      final allResponse = await _supabase.from(_table).select();
+      final allProducts = (allResponse as List)
+          .map((data) => _productFromSupabase(data))
+          .toList();
+
+      final filtered = allProducts.where((p) => ids.contains(p.id)).toList();
+      debugPrint('Found ${filtered.length} products via client-side filtering');
+      return filtered;
     } catch (e) {
       debugPrint('Error fetching products by IDs: $e');
-      return [];
+
+      // One last attempt - try fetching all and filtering, in case the filter caused the error
+      try {
+        final allResponse = await _supabase.from(_table).select();
+        final allProducts = (allResponse as List)
+            .map((data) => _productFromSupabase(data))
+            .toList();
+        return allProducts.where((p) => ids.contains(p.id)).toList();
+      } catch (e2) {
+        debugPrint('Fallback error: $e2');
+        return [];
+      }
     }
   }
 

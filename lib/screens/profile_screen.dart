@@ -16,6 +16,7 @@ import 'payment_methods_screen.dart';
 import 'splash_screen.dart';
 import 'admin_dashboard_screen.dart';
 import '../services/admin_service.dart';
+import 'notifications_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onProfileUpdated;
@@ -82,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _loadUserData() async {
-    setState(() => _isLoading = true);
+    if (mounted) setState(() => _isLoading = true);
 
     try {
       // Load user from Supabase
@@ -94,11 +95,15 @@ class _ProfileScreenState extends State<ProfileScreen>
       }
 
       _user = _userService.currentUser;
+
+      // Fetch orders explicitly to ensure they are loaded
+      await _userService.fetchOrdersFromDatabase();
+
       _recentOrders = _userService.orders.take(3).toList();
     } catch (e) {
       debugPrint('Error loading user data: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -135,15 +140,17 @@ class _ProfileScreenState extends State<ProfileScreen>
       return;
     }
 
-    setState(() => _isSettingLocation = true);
+    if (mounted) setState(() => _isSettingLocation = true);
     try {
       final position = await GoogleMapsService.getCurrentLocation();
       if (position == null) {
-        SnackbarUtils.showError(
-          context,
-          title: 'Location unavailable',
-          message: 'Permission denied or unavailable.',
-        );
+        if (mounted) {
+          SnackbarUtils.showError(
+            context,
+            title: 'Location unavailable',
+            message: 'Permission denied or unavailable.',
+          );
+        }
         return;
       }
 
@@ -167,28 +174,34 @@ class _ProfileScreenState extends State<ProfileScreen>
 
       final saved = await _userService.addAddress(address);
       if (!saved) {
-        SnackbarUtils.showError(
-          context,
-          title: 'Could not save address',
-          message: 'Please try again.',
-        );
+        if (mounted) {
+          SnackbarUtils.showError(
+            context,
+            title: 'Could not save address',
+            message: 'Please try again.',
+          );
+        }
         return;
       }
 
       await _userService.setCurrentUserFromSupabase(authService.currentUser!);
       _user = _userService.currentUser;
       if (mounted) setState(() {});
-      SnackbarUtils.showSuccess(
-        context,
-        title: 'Location saved',
-        message: 'Your address was added as default.',
-      );
+      if (mounted) {
+        SnackbarUtils.showSuccess(
+          context,
+          title: 'Location saved',
+          message: 'Your address was added as default.',
+        );
+      }
     } catch (_) {
-      SnackbarUtils.showError(
-        context,
-        title: 'Error',
-        message: 'Something went wrong while saving location.',
-      );
+      if (mounted) {
+        SnackbarUtils.showError(
+          context,
+          title: 'Error',
+          message: 'Something went wrong while saving location.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSettingLocation = false);
     }
@@ -249,7 +262,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             const SizedBox(height: 20),
                             _buildProfileHeader(),
                             const SizedBox(height: 24),
-                            _buildStatsRow(),
+
                             const SizedBox(height: 32),
                             _buildQuickActionsGrid(),
                             const SizedBox(height: 32),
@@ -276,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
       flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 20, bottom: 60, right: 100),
+        titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
         title: Text(
           AppLocalizations.of(context).profile,
           style: TextStyle(
@@ -502,7 +515,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           child: const Icon(
                             Icons.location_on_rounded,
                             size: 16,
-                            color: Colors.white,
+                            color: Color.fromARGB(255, 182, 9, 9),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -517,11 +530,15 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   ),
                                 ),
                               )
-                            : Text(
-                                _locationLabel(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
+                            : Flexible(
+                                child: Text(
+                                  _locationLabel(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                         const SizedBox(width: 8),
@@ -539,50 +556,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStatsRow() {
-    final totalOrders = _userService.orders.length;
-    final completedOrders = _userService.orders
-        .where((order) => order.status == OrderStatus.delivered)
-        .length;
-
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            label: AppLocalizations.of(context).orders,
-            value: totalOrders.toString(),
-            subtitle:
-                '$completedOrders ${AppLocalizations.of(context).orders.toLowerCase()}',
-            icon: Icons.receipt_long_rounded,
-            gradient: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            label: AppLocalizations.of(context).points,
-            value: '124',
-            subtitle:
-                '${AppLocalizations.of(context).reward} ${AppLocalizations.of(context).points.toLowerCase()}',
-            icon: Icons.stars_rounded,
-            gradient: const [Color(0xFFF59E0B), Color(0xFFD97706)],
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            label: AppLocalizations.of(context).rating,
-            value: '4.8',
-            subtitle:
-                '${AppLocalizations.of(context).customer} ${AppLocalizations.of(context).rating.toLowerCase()}',
-            icon: Icons.star_rounded,
-            gradient: const [Color(0xFF10B981), Color(0xFF059669)],
-          ),
-        ),
-      ],
     );
   }
 
@@ -1179,6 +1152,14 @@ class _ProfileScreenState extends State<ProfileScreen>
           title: AppLocalizations.of(context).notifications,
           subtitle: AppLocalizations.of(context).managePreferences,
           gradient: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationsScreen(),
+              ),
+            );
+          },
         ),
         _buildMenuItem(
           icon: Icons.lock_rounded,

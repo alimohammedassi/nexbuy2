@@ -18,8 +18,13 @@ class CheckoutService {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) {
-        debugPrint('No user logged in, cannot process checkout');
-        return null;
+        throw Exception('No user logged in, cannot process checkout');
+      }
+
+      if (shippingAddress.id.isEmpty) {
+        throw Exception(
+          'Invalid shipping address. Please select a valid address.',
+        );
       }
 
       // Calculate total
@@ -62,11 +67,28 @@ class CheckoutService {
         });
       }
 
+      // Create notification for new order
+      try {
+        await _supabase.from('notifications').insert({
+          'user_id': user.id,
+          'title': 'Order Placed Successfully',
+          'message':
+              'Your order #$orderNumber has been placed and is pending confirmation.',
+          'type': 'orderUpdate',
+          'is_read': false,
+          'created_at': DateTime.now().toIso8601String(),
+          'data': {'orderId': orderId, 'orderNumber': orderNumber},
+        });
+      } catch (e) {
+        debugPrint('Failed to send notification: $e');
+        // Continue execution even if notification fails
+      }
+
       debugPrint('Order created successfully: $orderNumber');
       return orderNumber;
     } catch (e) {
       debugPrint('Checkout error: $e');
-      return null;
+      rethrow; // Rethrow to let UI handle the error
     }
   }
 
@@ -86,6 +108,17 @@ class CheckoutService {
           })
           .eq('id', orderId)
           .eq('user_id', user.id);
+
+      // Create notification for status update
+      await _supabase.from('notifications').insert({
+        'user_id': user.id,
+        'title': 'Order Updated',
+        'message': 'Your order status has been updated to ${newStatus.name}.',
+        'type': 'orderUpdate',
+        'is_read': false,
+        'created_at': DateTime.now().toIso8601String(),
+        'data': {'orderId': orderId, 'status': newStatus.name},
+      });
 
       debugPrint('Order status updated to ${newStatus.name}');
       return true;

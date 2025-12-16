@@ -383,65 +383,69 @@ class UserService extends ChangeNotifier {
 
       _orders.clear();
       for (var orderData in ordersResponse) {
-        // Parse order items
-        final items = (orderData['order_items'] as List)
-            .map(
-              (item) => app_models.OrderItem(
-                id: item['id'].toString(),
-                productId: item['product_id'].toString(),
-                productName: item['product_name'].toString(),
-                productImage: item['product_image'].toString(),
-                price: (item['price'] as num).toDouble(),
-                quantity: item['quantity'] as int,
-              ),
-            )
-            .toList();
+        try {
+          // Parse order items
+          final items = (orderData['order_items'] as List)
+              .map(
+                (item) => app_models.OrderItem(
+                  id: item['id'].toString(),
+                  productId: item['product_id'].toString(),
+                  productName: item['product_name'].toString(),
+                  productImage: item['product_image'].toString(),
+                  price: (item['price'] as num).toDouble(),
+                  quantity: item['quantity'] as int,
+                ),
+              )
+              .toList();
 
-        // Get shipping address if available
-        app_models.Address? shippingAddress;
-        if (orderData['shipping_address_id'] != null) {
-          final addressData = await _supabase
-              .from('addresses')
-              .select()
-              .eq('id', orderData['shipping_address_id'])
-              .maybeSingle();
+          // Get shipping address if available
+          app_models.Address? shippingAddress;
+          if (orderData['shipping_address_id'] != null) {
+            final addressData = await _supabase
+                .from('addresses')
+                .select()
+                .eq('id', orderData['shipping_address_id'])
+                .maybeSingle();
 
-          if (addressData != null) {
-            shippingAddress = _addressFromSupabase(addressData);
+            if (addressData != null) {
+              shippingAddress = _addressFromSupabase(addressData);
+            }
           }
+
+          // Create default address if none found
+          shippingAddress ??= app_models.Address(
+            id: '',
+            title: 'No Address',
+            fullAddress: '',
+            latitude: 0.0,
+            longitude: 0.0,
+            city: '',
+            state: '',
+            zipCode: '',
+            country: '',
+          );
+
+          final order = app_models.Order(
+            id: orderData['id'].toString(),
+            orderNumber: orderData['order_number'].toString(),
+            items: items,
+            totalAmount: (orderData['total_amount'] as num).toDouble(),
+            status: app_models.OrderStatus.values.firstWhere(
+              (e) => e.name == orderData['status'],
+              orElse: () => app_models.OrderStatus.pending,
+            ),
+            shippingAddress: shippingAddress,
+            orderDate: DateTime.parse(orderData['order_date']),
+            deliveryDate: orderData['delivery_date'] != null
+                ? DateTime.parse(orderData['delivery_date'])
+                : null,
+            trackingNumber: orderData['tracking_number'],
+          );
+
+          _orders.add(order);
+        } catch (e) {
+          debugPrint('Error parsing order ${orderData['id']}: $e');
         }
-
-        // Create default address if none found
-        shippingAddress ??= app_models.Address(
-          id: '',
-          title: 'No Address',
-          fullAddress: '',
-          latitude: 0.0,
-          longitude: 0.0,
-          city: '',
-          state: '',
-          zipCode: '',
-          country: '',
-        );
-
-        final order = app_models.Order(
-          id: orderData['id'].toString(),
-          orderNumber: orderData['order_number'].toString(),
-          items: items,
-          totalAmount: (orderData['total_amount'] as num).toDouble(),
-          status: app_models.OrderStatus.values.firstWhere(
-            (e) => e.name == orderData['status'],
-            orElse: () => app_models.OrderStatus.pending,
-          ),
-          shippingAddress: shippingAddress,
-          orderDate: DateTime.parse(orderData['order_date']),
-          deliveryDate: orderData['delivery_date'] != null
-              ? DateTime.parse(orderData['delivery_date'])
-              : null,
-          trackingNumber: orderData['tracking_number'],
-        );
-
-        _orders.add(order);
       }
 
       debugPrint('Fetched ${_orders.length} orders from database');
